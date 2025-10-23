@@ -1,0 +1,9 @@
+trigger:
+- main
+
+pool:
+  name: Default  # or the name of your custom pool
+
+steps:
+- script: echo "Hello from $(Agent.Name)!"
+  displayName: 'Test Agent Run'
