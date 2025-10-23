@@ -1,8 +1,10 @@
 using UnityEditor;
 using System.IO;
+using UnityEngine;
 
 public static class BuildScript
 {
+    [MenuItem("Tool/Build")]
     public static void BuildAndroid()
     {
         string buildPath = "Builds/Android/MyGame.apk";
@@ -10,7 +12,7 @@ public static class BuildScript
             Directory.CreateDirectory("Builds/Android");
 
         BuildPipeline.BuildPlayer(
-            new[] { "Assets/Scenes/MainScene.unity" }, // change scenes as needed
+            new[] { "Assets/Scenes/SampleScene.unity" }, // change scenes as needed
             buildPath,
             BuildTarget.Android,
             BuildOptions.None
