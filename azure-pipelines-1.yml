@@ -41,9 +41,52 @@ steps:
         -customBuildName "$(BUILD_FILE_NAME)"
     displayName: "Build Unity Android APK"
 
-  # --- Publish build artifacts ---
+  # 3️⃣ Publish the built APK as pipeline artifact
   - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: '$(BUILD_PATH)'
       ArtifactName: 'AndroidBuild'
       publishLocation: 'Container'
+    displayName: "Publish APK Artifact"
+
+  # 4️⃣ Get artifact download URL via Azure DevOps REST API
+  - script: |
+      echo "Fetching artifact download URL..."
+      ORG_URL="https://dev.azure.com/$(System.CollectionId)"  # auto-filled in Azure
+      PROJECT="$(System.TeamProject)"
+      BUILD_ID="$(Build.BuildId)"
+      TOKEN="$(System.AccessToken)"
+
+      # Call Azure DevOps API to get artifact info
+      RESPONSE=$(curl -s \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "Content-Type: application/json" \
+        "$ORG_URL/$PROJECT/_apis/build/builds/$BUILD_ID/artifacts?api-version=6.0")
+
+      # Parse the download URL of the artifact
+      DOWNLOAD_URL=$(echo "$RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data['value'][0]['resource']['downloadUrl'])")
+
+      echo "Artifact URL: $DOWNLOAD_URL"
+      echo "##vso[task.setvariable variable=APK_URL;isOutput=true]$DOWNLOAD_URL"
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    displayName: "Retrieve Artifact Download URL"
+    name: getArtifactUrl
+
+  # 5️⃣ Post message to ClickUp Chat with artifact link
+  - script: |
+      echo "Posting message to ClickUp Chat Room..."
+
+      MESSAGE="✅ New Android build ready!\nDownload here: $(getArtifactUrl.APK_URL)"
+
+      curl -X POST "https://api.clickup.com/api/v2/room/2kzknbkg-11038/message" \
+        -H "Authorization: $(CLICKUP_TOKEN)" \
+        -H "Content-Type: application/json" \
+        -d "{
+              \"text\": \"$MESSAGE\"
+            }"
+
+    env:
+      CLICKUP_TOKEN: $(CLICKUP_TOKEN)
+    condition: succeeded()
+    displayName: "Notify ClickUp Chat Room"
