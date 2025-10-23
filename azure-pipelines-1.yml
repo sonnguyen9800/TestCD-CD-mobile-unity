@@ -7,7 +7,7 @@ trigger:
       - main   # change this to your branch name if needed
 
 pool:
-  name: Default   # Replace with your agent pool name (from Azure DevOps)
+  name: test-ci-cd-local-unity   # Replace with your agent pool name (from Azure DevOps)
   demands:
     - agent.os -equals Darwin   # Ensure it runs on macOS agent
 
