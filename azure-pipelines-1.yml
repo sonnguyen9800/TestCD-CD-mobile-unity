@@ -1,0 +1,49 @@
+# azure-pipelines.yml
+# Unity Android build pipeline using a self-hosted Mac agent
+
+trigger:
+  branches:
+    include:
+      - main   # change this to your branch name if needed
+
+pool:
+  name: Default   # Replace with your agent pool name (from Azure DevOps)
+  demands:
+    - agent.os -equals Darwin   # Ensure it runs on macOS agent
+
+variables:
+  UNITY_VERSION: "2022.3.62f2"          # adjust to your Unity version
+  PROJECT_PATH: "."                    # root of your Unity project
+  BUILD_PATH: "Builds/Android"         # output path relative to project
+  BUILD_FILE_NAME: "MyGame.apk"        # output apk name
+  UNITY_EXECUTABLE: "/Applications/Unity/Hub/Editor/2022.3.62f2/Unity.app"
+
+steps:
+  - checkout: self
+    clean: true
+
+  # --- Optional: Verify Unity installation ---
+  - script: |
+      echo "Checking Unity version..."
+      "$UNITY_EXECUTABLE" -version
+    displayName: "Check Unity version"
+
+  # --- Build the Android APK ---
+  - script: |
+      echo "Starting Unity build..."
+      "$UNITY_EXECUTABLE" \
+        -projectPath "$(PROJECT_PATH)" \
+        -buildTarget Android \
+        -executeMethod BuildScript.BuildAndroid \
+        -quit -batchmode -nographics \
+        -logFile "$(Build.ArtifactStagingDirectory)/unity_build.log" \
+        -customBuildPath "$(BUILD_PATH)/$(BUILD_FILE_NAME)" \
+        -customBuildName "$(BUILD_FILE_NAME)"
+    displayName: "Build Unity Android APK"
+
+  # --- Publish build artifacts ---
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(BUILD_PATH)'
+      ArtifactName: 'AndroidBuild'
+      publishLocation: 'Container'
