@@ -16,7 +16,7 @@ variables:
   PROJECT_PATH: "."                    # root of your Unity project
   BUILD_PATH: "Builds/Android"         # output path relative to project
   BUILD_FILE_NAME: "MyGame.apk"        # output apk name
-  UNITY_EXECUTABLE: "/Applications/Unity/Hub/Editor/2022.3.62f2/Unity.app"
+  UNITY_EXECUTABLE: "/Applications/Unity/Hub/Editor/2022.3.62f2/Unity.app/Contents/MacOS/Unity"
 
 steps:
   - checkout: self
